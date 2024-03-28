@@ -1,7 +1,7 @@
 import { Button } from 'primereact/button';
 import { ConfirmDialog } from 'primereact/confirmdialog'
 import { Toast } from 'primereact/toast'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useExportFiles, useFetchData, useSendDeleteData } from '../../../app/service';
@@ -11,9 +11,6 @@ import { Link } from 'react-router-dom';
 const Product = () => {
     const [visible, setVisible] = useState(false);
     const toast = useRef(null);
-    const [show, setShow] = useState(false);
-
-    const handleShow = () => setShow(true);
     const [product, setProduct] = useState([]);
     const fetchData = useFetchData();
     const deleteData = useSendDeleteData();
@@ -24,8 +21,6 @@ const Product = () => {
     const [currentPage, setCurrentPage] = useState(1); // Add currentPage state
     const [deleteId, setDeleteId] = useState('');
     const [perPage, setPerPage] = useState(10);
-    const [editMode, setEditMode] = useState(false); // State to toggle edit mode
-    const [editData, setEditData] = useState(null); // State to hold data for editing
 
     const columns = [
         {
@@ -34,14 +29,14 @@ const Product = () => {
             sortable: true,
             cell: row => (
                 <div>
-                    <div>{row.name}</div>
+                    <div>{row.product_name}</div>
                     <img src={row.profile_image} alt="" width={50} />
                 </div>
             ),
         },
         {
-            name: 'Description',
-            selector: row => row.description,
+            name: 'SKU',
+            selector: row => row.product_sku,
         },
         {
             name: 'Status',
@@ -52,7 +47,9 @@ const Product = () => {
             name: 'Actions',
             cell: row => (
                 <div>
-                    <Button onClick={() => handleEdit(row)} icon="pi pi-check" label="Edit" />
+                    <Link to={`form/${row._id}`}>
+                        <Button icon="pi pi-check" label="Edit" />
+                    </Link>
                     <Button onClick={() => handleDelete(row)} icon="pi pi-times" label="Delete" className="p-button-danger"></Button>
                 </div>
             ),
@@ -62,10 +59,10 @@ const Product = () => {
     const fetchProductData = async (page) => {
         setLoading(true);
         try {
-            await fetchData(`http://localhost:3200/api/category?page=${page}&per_page=${perPage}&delay=1&search=${searchTerm}`).then(response => {
+            await fetchData(`http://localhost:3200/api/product?page=${page}&per_page=${perPage}&delay=1&search=${searchTerm}`).then(response => {
                 console.log(' response ', response.data);
 
-                setProduct(response.data.categories);
+                setProduct(response.data.products);
                 setTotalRows(response.data.total);
                 setCurrentPage(page); // Update currentPage when fetching data
                 setLoading(false);
@@ -78,7 +75,7 @@ const Product = () => {
     const accept = () => {
         const delete_id = deleteId._id;
         try {
-            deleteData(`http://localhost:3200/api/category/${delete_id}`).then(response => {
+            deleteData(`http://localhost:3200/api/product/${delete_id}`).then(response => {
                 console.log(' delete response ', response);
                 if (response.data.status === 0) {
                     toast.current.show({ severity: 'info', summary: 'Confirmed', detail: response.data.message, life: 3000 });
@@ -96,11 +93,6 @@ const Product = () => {
         toast.current.show({ severity: 'warn', summary: 'Rejected', detail: 'You have rejected the Delete Process', life: 3000 });
     }
 
-    const handleEdit = (row) => {
-        setEditMode(true);
-        setEditData(row); // Set data for editing
-        setShow(true); // Show modal
-    };
 
     const handleDelete = (row) => {
         setVisible(true);
@@ -114,13 +106,6 @@ const Product = () => {
         const searchTerm = event.target.value.toLowerCase();
         setSearchTerm(searchTerm.length > 2 ? searchTerm : '');
     };
-
-    const handleClose = () => {
-        setShow(false);
-        setEditMode(false); // Reset edit mode
-        setEditData(null); // Reset edit data
-    };
-
 
     const exportFile = async (format) => {
 
@@ -139,6 +124,11 @@ const Product = () => {
             console.log(error, ' error ');
         }
     }
+
+    useEffect(() => {
+        fetchProductData(1);
+    }, [searchTerm])
+    
 
     return (
         <>
