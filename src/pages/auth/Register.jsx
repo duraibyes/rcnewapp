@@ -103,7 +103,7 @@ function Register() {
                                                 </div>
 
                                                 <div className="col-12">
-                                                    <button type="submit" className="btn btn-primary px-4 float-end mt-4">login</button>
+                                                    <button type="submit" className="btn btn-primary px-4 float-end mt-4">Create</button>
                                                 </div>
                                             </Form>
                                         </div>

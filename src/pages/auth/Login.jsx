@@ -2,15 +2,19 @@ import React from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import Cookies from "universal-cookie";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser } from '../../app/slices/authSlice';
 
 function Login() {
-
     const navigate = useNavigate();
-    const cookies = new Cookies();
+    // const cookies = new Cookies();
+    const dispatch = useDispatch();
+    const isLoading = useSelector((state) => state.auth.isLoading);
+    const error = useSelector((state) => state.auth.error);
+
     return (
         <Formik
             initialValues={{ username: '', password: '' }}
@@ -19,31 +23,19 @@ function Login() {
                 password: Yup.string().required('Password is required')
             })}
             onSubmit={(values, { setSubmitting }) => {
-                // You can handle form submission here, e.g., make an API call
-                console.log('Form submitted:', values);
-                const apiUrl = 'http://localhost:3200/api/users/login';
-                const configurations = {
-                    method: 'post',
-                    url: apiUrl,
-                    data: values
-                }
-                axios(configurations)
-                    .then((result) => {
-                        if (result.data.status === 1) {
-                            toast.error(result.data.message);
-                        } else {
-                            toast.success(result.data.message);
 
-                            cookies.set("TOKEN", result.data.token, {
-                                path: "/",
-                            });
-                            setTimeout(() => {
-                                navigate('/');
-                            }, 1000);
-                        }
+                dispatch(loginUser(values)).then((result) => {
 
-                    })
-                    .catch((error) => { console.log(error); })
+                    if (result.payload.status === 1) {
+                        toast.error(result.payload.message);
+                    } else {
+                        toast.success(result.payload.message);
+                        setTimeout(() => {
+                            navigate('/');
+                        }, 1000);
+                    }
+
+                });
                 setSubmitting(false);
             }}
         >
@@ -61,6 +53,8 @@ function Login() {
                                                     <label>Username<span className="text-danger">*</span></label>
                                                     <div className="input-group">
                                                         <Field type="text" id="username" name="username" className="form-control" />
+                                                    </div>
+                                                    <div className="text-danger">
                                                         <ErrorMessage name="username" />
                                                     </div>
                                                 </div>
@@ -69,6 +63,8 @@ function Login() {
                                                     <label>Password<span className="text-danger">*</span></label>
                                                     <div className="input-group">
                                                         <Field type="password" id="password" name="password" className="form-control" />
+                                                    </div>
+                                                    <div className="text-danger">
                                                         <ErrorMessage name="password" />
                                                     </div>
                                                 </div>
@@ -88,7 +84,7 @@ function Login() {
                                                 </div>
 
                                                 <div className="col-sm-6">
-                                                    <button type="submit" className="btn btn-primary px-4 float-end mt-4">login</button>
+                                                    <button type="submit" className="btn btn-primary px-4 float-end mt-4">{isLoading ? 'Loading' : 'Login'}</button>
                                                 </div>
                                             </Form>
                                         </div>

@@ -1,0 +1,11 @@
+section.container.img-dropzone {
+    border: 1px solid #ddd;
+    padding: 5px;
+    /* text-align: center; */
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    min-height: 300px;
+    align-items: center;
+    flex-direction: column;
+}
